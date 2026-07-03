@@ -1,6 +1,6 @@
 # Text-to-QCA Analysis Tool
 
-This project is a take-home assessment submission for Task 2: converting raw text into QCA-ready conditions and basic QCA results.
+Converting raw text into QCA-ready conditions and basic QCA results.
 
 The tool lets a researcher upload a text dataset and conceptual prototypes, score each text against the prototypes, calibrate those scores into set memberships, build a QCA-ready dataset, generate a truth table, calculate consistency and coverage, and export the main outputs.
 
