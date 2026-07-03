@@ -152,7 +152,7 @@ def download_button(label: str, df: pd.DataFrame, filename: str) -> None:
         data=df.to_csv(index=False).encode("utf-8-sig"),
         file_name=filename,
         mime="text/csv",
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -254,6 +254,35 @@ def apply_human_overrides(
     return reviewed
 
 
+def describe_configuration(row: pd.Series, condition_cols: list[str]) -> str:
+    present = [condition for condition in condition_cols if int(row[condition]) == 1]
+    absent = [condition for condition in condition_cols if int(row[condition]) == 0]
+    parts = []
+    if present:
+        parts.append("presence of " + ", ".join(present))
+    if absent:
+        parts.append("absence of " + ", ".join(absent))
+    return "; ".join(parts) if parts else "no listed conditions"
+
+
+def load_review_overrides(uploaded_file) -> dict[tuple[object, str], float]:
+    review_log = pd.read_csv(uploaded_file)
+    required = {"case_id", "condition_name", "final_value"}
+    missing = required.difference(review_log.columns)
+    if missing:
+        raise ValueError(f"Review log is missing required columns: {sorted(missing)}")
+
+    overrides: dict[tuple[object, str], float] = {}
+    for _, row in review_log.iterrows():
+        if pd.isna(row["case_id"]) or pd.isna(row["condition_name"]) or pd.isna(row["final_value"]):
+            continue
+        value = float(row["final_value"])
+        if value < 0.0 or value > 1.0:
+            raise ValueError("Review log final_value entries must be between 0 and 1.")
+        overrides[(row["case_id"], str(row["condition_name"]))] = value
+    return overrides
+
+
 def main() -> None:
     st.set_page_config(page_title="Text-to-QCA Analysis Tool", layout="wide", page_icon="🧭")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -279,10 +308,18 @@ def main() -> None:
         st.header("📂 Data")
         text_file = st.file_uploader("Text dataset CSV", type=["csv"])
         prototype_file = st.file_uploader("Prototype CSV", type=["csv"])
+        using_demo_data = text_file is None and prototype_file is None
         texts = pd.read_csv(text_file) if text_file else demo_texts.copy()
         prototypes = (
             pd.read_csv(prototype_file) if prototype_file else demo_prototypes.copy()
         )
+        if using_demo_data:
+            st.info(
+                "Demo data is loaded and the case/text/outcome columns are pre-selected. "
+                "Change these column choices only when uploading your own CSV."
+            )
+        else:
+            st.caption("Map your uploaded columns to the roles used by the workflow.")
 
         case_col = st.selectbox(
             "Case id column",
@@ -333,6 +370,8 @@ def main() -> None:
 
     if "human_overrides" not in st.session_state:
         st.session_state["human_overrides"] = {}
+    if "review_log_upload_id" not in st.session_state:
+        st.session_state["review_log_upload_id"] = None
 
     required_prototype_cols = {"condition_name", "prototype"}
     missing_prototype_cols = required_prototype_cols.difference(prototypes.columns)
@@ -489,7 +528,16 @@ def main() -> None:
     )
 
     with tab_scores:
-        st.dataframe(scores, use_container_width=True, hide_index=True)
+        score_display_cols = [
+            "case_id",
+            "condition_name",
+            "matched_keywords",
+            "score",
+            "calibration_score",
+        ]
+        st.dataframe(scores[score_display_cols], width="stretch", hide_index=True)
+        with st.expander("Show full scoring details", expanded=False):
+            st.dataframe(scores, width="stretch", hide_index=True)
         download_button("Download score table", scores, "score_table.csv")
         download_button(
             "Download wide score table",
@@ -524,8 +572,8 @@ def main() -> None:
             st.caption(explain_score(row, keyword_weight))
 
     with tab_calibration:
-        st.dataframe(calibration_rules, use_container_width=True, hide_index=True)
-        st.dataframe(calibrated, use_container_width=True, hide_index=True)
+        st.dataframe(calibration_rules, width="stretch", hide_index=True)
+        st.dataframe(calibrated, width="stretch", hide_index=True)
         download_button("Download calibration rules", calibration_rules, "calibration_rules.csv")
         download_button(
             "Download calibrated membership",
@@ -575,7 +623,7 @@ def main() -> None:
                         plot_bgcolor="#fcfcfb",
                         paper_bgcolor="rgba(0,0,0,0)",
                     )
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
                 else:
                     st.bar_chart(values)
 
@@ -592,7 +640,7 @@ def main() -> None:
                     "high (>0.66)": int((values > 0.66).sum()),
                 }
             )
-        st.dataframe(pd.DataFrame(bucket_rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(bucket_rows), width="stretch", hide_index=True)
 
     with tab_review:
         st.caption(
@@ -602,12 +650,28 @@ def main() -> None:
             "trusting the automatic score. Edit 'final_value' to override; overrides feed "
             "directly into the QCA-ready dataset, truth table, and downstream results."
         )
+        uploaded_review_log = st.file_uploader(
+            "Reload a saved human review log",
+            type=["csv"],
+            key="review_log_reload",
+            help="Upload a previously downloaded human_review_log.csv to restore manual overrides.",
+        )
+        if uploaded_review_log is not None:
+            upload_id = f"{uploaded_review_log.name}:{uploaded_review_log.size}"
+            if st.session_state.get("review_log_upload_id") != upload_id:
+                try:
+                    loaded_overrides = load_review_overrides(uploaded_review_log)
+                    st.session_state["human_overrides"].update(loaded_overrides)
+                    st.session_state["review_log_upload_id"] = upload_id
+                    st.rerun()
+                except Exception as exc:
+                    st.error(str(exc))
         if review_table.empty:
             st.info("No cases fall within the current ambiguity band.")
         else:
             edited = st.data_editor(
                 review_table,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 disabled=["case_id", "condition_name", "text", "raw_score", "anchor", "calibrated_value"],
                 column_config={
@@ -634,18 +698,26 @@ def main() -> None:
             download_button("Download human review log", review_log, "human_review_log.csv")
 
     with tab_qca:
-        st.dataframe(qca_ready, use_container_width=True, hide_index=True)
+        st.dataframe(qca_ready, width="stretch", hide_index=True)
         download_button("Download QCA-ready dataset", qca_ready, "qca_ready_dataset.csv")
 
     with tab_truth:
-        st.dataframe(table, use_container_width=True, hide_index=True)
+        st.dataframe(table, width="stretch", hide_index=True)
         download_button("Download truth table", table, "truth_table.csv")
 
     with tab_solutions:
         if solutions.empty:
             st.warning("No configuration meets the current consistency and case thresholds.")
         else:
-            st.dataframe(solutions, use_container_width=True, hide_index=True)
+            st.markdown("**Plain-language interpretation**")
+            for index, row in solutions.head(3).iterrows():
+                st.markdown(
+                    f"- Solution {index + 1}: {describe_configuration(row, condition_cols)} "
+                    f"is associated with the outcome "
+                    f"(consistency = {float(row['consistency']):.3f}, "
+                    f"coverage = {float(row['coverage']):.3f}, cases = {row['cases']})."
+                )
+            st.dataframe(solutions, width="stretch", hide_index=True)
         download_button(
             "Download solution configurations",
             solutions,
@@ -686,8 +758,8 @@ def main() -> None:
                     plot_bgcolor="#fcfcfb",
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(cutoff_sweep, use_container_width=True, hide_index=True)
+                st.plotly_chart(fig, width="stretch")
+            st.dataframe(cutoff_sweep, width="stretch", hide_index=True)
             download_button("Download cutoff sweep", cutoff_sweep, "sensitivity_cutoff_sweep.csv")
 
         with right:
@@ -715,8 +787,8 @@ def main() -> None:
                     plot_bgcolor="#fcfcfb",
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig2, use_container_width=True)
-            st.dataframe(threshold_sweep, use_container_width=True, hide_index=True)
+                st.plotly_chart(fig2, width="stretch")
+            st.dataframe(threshold_sweep, width="stretch", hide_index=True)
             download_button("Download crossover sweep", threshold_sweep, "sensitivity_threshold_sweep.csv")
 
     with tab_figure:
@@ -731,7 +803,7 @@ def main() -> None:
                 labels=dict(x="Condition / outcome", y="Case", color="Membership"),
             )
             fig.update_layout(height=max(420, 24 * len(heatmap_data)), paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.dataframe(heatmap_data.style.background_gradient(cmap="Blues"))
 
@@ -749,7 +821,7 @@ def main() -> None:
             )
             scatter.add_vline(x=consistency_cutoff, line_dash="dash", line_color=COLOR_MUTED)
             scatter.update_layout(plot_bgcolor="#fcfcfb", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(scatter, use_container_width=True)
+            st.plotly_chart(scatter, width="stretch")
 
     with st.expander("Method note", expanded=False):
         st.markdown(

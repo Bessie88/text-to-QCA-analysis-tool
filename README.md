@@ -14,7 +14,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app loads the included demo files by default:
+The app loads the included demo files by default and pre-selects `case_id`, `text`, and `outcome` when those columns are present. Change the column selectors only when uploading your own CSV files.
 
 - `data/demo_texts.csv`
 - `data/prototypes.csv`
@@ -69,7 +69,7 @@ If a prototype has no keywords, the score is just the semantic similarity.
 Before calibration, the tool applies a low-signal floor: if a case has no
 matched keywords for a condition and the raw score is below `0.01`, its
 `calibration_score` is set to `0`. The original `score` is still preserved in
-`score_table.csv`; this guard prevents tiny character-overlap noise from being
+`score_table.csv`; this guard prevents tiny low-signal semantic similarities from being
 amplified by percentile-based calibration in small demo datasets.
 
 The calibration step supports:
@@ -130,9 +130,21 @@ This creates:
 - `outputs/sensitivity_threshold_sweep.csv` — number of configurations and solutions across a range of configuration crossovers
 - `outputs/membership_heatmap.html`
 
+## Web Demo Deployment
+
+A public web demo can be deployed with Streamlit Community Cloud after this repository is pushed to GitHub:
+
+1. Go to <https://share.streamlit.io/> and create a new app from this repository.
+2. Set the branch to `main`.
+3. Set the main file path to `app.py`.
+4. Keep Python at 3.12 if possible; `runtime.txt` is included for hosted environments that read it.
+5. Start the app. The first build may take several minutes because it installs `sentence-transformers` and downloads the multilingual model.
+
+The same code can also run on Hugging Face Spaces with the Streamlit SDK; use `app.py` as the app file and `requirements.txt` as the dependency list.
+
 ## Reproducibility
 
-The core algorithm is deterministic after the embedding model is available locally. The scorer does not call an external API during scoring, but the first run may download the multilingual sentence-transformer model from Hugging Face unless it is already cached. All demo outputs can be regenerated from the included demo data and prototype file.
+The core algorithm is deterministic after the embedding model is available locally. The scorer does not call an external API during scoring, but the first run requires internet access to download the multilingual sentence-transformer model from Hugging Face unless it is already cached. If the model is cached, the demo outputs can be regenerated offline from the included demo data and prototype file.
 
 ## Limitations
 
