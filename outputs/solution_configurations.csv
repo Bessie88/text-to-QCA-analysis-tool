@@ -1,0 +1,4 @@
+dissatisfaction,policy_demand,coproduction_request,trust,configuration,n_cases,positive_cases,negative_cases,consistency,coverage,outcome_value,status,cases
+0,0,1,0,~dissatisfaction * ~policy_demand * coproduction_request * ~trust,3,3,0,1.0,0.272727,1,sufficient,3; 8; 12
+0,0,0,1,~dissatisfaction * ~policy_demand * ~coproduction_request * trust,2,2,0,1.0,0.181818,1,sufficient,4; 9
+0,1,1,1,~dissatisfaction * policy_demand * coproduction_request * trust,1,1,0,1.0,0.063211,1,sufficient,16

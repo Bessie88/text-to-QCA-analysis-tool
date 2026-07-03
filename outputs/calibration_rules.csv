@@ -1,0 +1,5 @@
+condition_name,method,full_out,crossover,full_in,threshold
+dissatisfaction,fuzzy,0.0,0.013149,0.026298,
+policy_demand,fuzzy,0.0,0.012531,0.051982,
+coproduction_request,fuzzy,0.0,0.003156,0.006312,
+trust,fuzzy,0.0,0.003937,0.007874,
