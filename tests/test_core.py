@@ -10,10 +10,32 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from qca_text_tool.calibration import calibrate_scores
 from qca_text_tool.qca import solution_configurations, truth_table
 from qca_text_tool.scoring import (
+    _keyword_match_score,
     add_low_signal_floor,
     score_texts_against_prototypes,
     wide_score_table,
 )
+
+
+class KeywordMatchingTest(unittest.TestCase):
+    def test_keyword_matching_avoids_substring_and_negation_false_positives(self):
+        score, matched = _keyword_match_score(
+            "Residents distrust the current explanation.",
+            ("trust", "distrust"),
+        )
+        self.assertEqual(score, 0.5)
+        self.assertEqual(matched, "distrust")
+
+        score, matched = _keyword_match_score(
+            "新规定说法前后不一致，居民不信任目前的解释。",
+            ("信任", "不信任"),
+        )
+        self.assertEqual(score, 0.5)
+        self.assertEqual(matched, "不信任")
+
+        score, matched = _keyword_match_score("居民信任并支持这项工作。", ("信任",))
+        self.assertEqual(score, 1.0)
+        self.assertEqual(matched, "信任")
 
 
 class DemoWorkflowTest(unittest.TestCase):

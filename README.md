@@ -55,16 +55,16 @@ For multilingual text, write the `prototype` description and the `keywords` in t
 
 The default scorer combines:
 
-1. character n-gram cosine similarity between each text and each prototype
+1. semantic cosine similarity between each text and each prototype, using the multilingual sentence-transformer `paraphrase-multilingual-MiniLM-L12-v2` (supports cross-lingual matching, e.g. Chinese text against an English prototype)
 2. optional keyword overlap using the `keywords` column
 
 The final raw score is:
 
 ```text
-score = (1 - keyword_weight) * ngram_score + keyword_weight * keyword_score
+score = (1 - keyword_weight) * semantic_score + keyword_weight * keyword_score
 ```
 
-If a prototype has no keywords, the score is just the n-gram similarity.
+If a prototype has no keywords, the score is just the semantic similarity.
 
 Before calibration, the tool applies a low-signal floor: if a case has no
 matched keywords for a condition and the raw score is below `0.01`, its
@@ -101,7 +101,7 @@ Observed configurations that meet the selected consistency cutoff and minimum ca
 
 The Streamlit app adds four features on top of the minimum upload-to-solution pipeline:
 
-- **Explainable scoring** (Scores tab). Pick any case and condition to see the raw text with matched keyword spans highlighted, plus a one-line breakdown of the score formula (`score = (1-w)*ngram + w*keyword`) with the actual numbers substituted in. This is meant to answer "why did this text get this score" without reading code.
+- **Explainable scoring** (Scores tab). Pick any case and condition to see the raw text with matched keyword spans highlighted, plus a one-line breakdown of the score formula (`score = (1-w)*semantic + w*keyword`) with the actual numbers substituted in. This is meant to answer "why did this text get this score" without reading code.
 - **Calibration playground** (Calibration playground tab). A histogram of raw scores per condition with the fuzzy anchors (or crisp threshold) drawn as vertical lines, plus a table of how many cases fall into low/mid/high membership buckets. Moving the anchor sliders in the sidebar and revisiting this tab shows how the split would change before committing to it.
 - **Human review of near-threshold cases** (Human review tab). Any case whose raw score sits within an adjustable band of the calibration anchor is flagged as ambiguous — a small wording difference could flip it. These cases are listed with their original text and are editable in place; overrides are applied before the QCA-ready dataset, truth table, and every downstream result are built, and can be exported as a review log. This keeps automated scoring from silently overriding a researcher's judgment on borderline cases.
 - **Threshold sensitivity analysis** (Sensitivity tab). Sweeps the consistency cutoff and, separately, the configuration crossover, holding everything else fixed, and reports how the number of solution configurations and their average consistency/coverage move. Since raising the cutoff can only shrink or hold the solution set, this makes visible how fragile (or robust) the reported solution is to that one choice, instead of presenting a single cutoff's result as definitive.
@@ -132,7 +132,7 @@ This creates:
 
 ## Reproducibility
 
-The core algorithm is deterministic. The local scorer does not call an external API and does not require model downloads. All demo outputs can be regenerated from the included demo data and prototype file.
+The core algorithm is deterministic after the embedding model is available locally. The scorer does not call an external API during scoring, but the first run may download the multilingual sentence-transformer model from Hugging Face unless it is already cached. All demo outputs can be regenerated from the included demo data and prototype file.
 
 ## Limitations
 

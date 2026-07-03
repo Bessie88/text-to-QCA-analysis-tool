@@ -1,10 +1,11 @@
-"""Prototype-based text scoring without external model downloads.
+"""Prototype-based text scoring using multilingual sentence embeddings.
 
-The default scorer combines character n-gram cosine similarity between each
-text and each prototype description with optional keyword overlap. Both the
-prototype text and the keywords column are free-form and may be written in
-any language (including mixed English/Chinese), which is what drives the
-score for non-English text -- there is no hidden per-language lookup table.
+The default scorer combines semantic cosine similarity (from a multilingual
+sentence-transformers model) between each text and each prototype description
+with optional keyword overlap. Both the prototype text and the keywords
+column are free-form and may be written in any language (including mixed
+English/Chinese); the embedding model itself is multilingual and supports
+cross-lingual matching (e.g. a Chinese text against an English prototype).
 """
 
 from __future__ import annotations
@@ -12,16 +13,20 @@ from __future__ import annotations
 import html
 import math
 import re
-from collections import Counter
 from dataclasses import dataclass
-from typing import Iterable
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 
 
+DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+
 TOKEN_RE = re.compile(r"[\u4e00-\u9fffA-Za-z0-9]+")
 KEYWORD_SPLIT_RE = re.compile(r"[,;|，、\n]+")
+CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+CJK_NEGATION_RE = re.compile(r"(不|没|没有|未|无|非|缺乏|难以)$")
+CJK_NEGATION_PREFIXES = ("不", "没", "没有", "未", "无", "非", "缺乏", "难以")
 
 
 @dataclass(frozen=True)
@@ -52,53 +57,63 @@ def parse_keywords(value: object) -> tuple[str, ...]:
     return tuple(dict.fromkeys(keywords))
 
 
-def _char_ngrams(text: str, ngram_range: tuple[int, int]) -> Counter[str]:
-    min_n, max_n = ngram_range
-    grams: Counter[str] = Counter()
-    for token in TOKEN_RE.findall(clean_text(text)):
-        if not token:
-            continue
-        for n in range(min_n, max_n + 1):
-            if len(token) < n:
-                if len(token) >= min_n:
-                    grams[token] += 1
-                continue
-            for idx in range(0, len(token) - n + 1):
-                grams[token[idx : idx + n]] += 1
-    return grams
+@lru_cache(maxsize=None)
+def _load_embedding_model(model_name: str):
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer(model_name)
 
 
-def _tfidf_vectors(
-    documents: Iterable[str], ngram_range: tuple[int, int]
-) -> list[dict[str, float]]:
-    counts = [_char_ngrams(doc, ngram_range) for doc in documents]
-    doc_count = len(counts)
-    document_frequency: Counter[str] = Counter()
-    for doc_counts in counts:
-        document_frequency.update(doc_counts.keys())
-
-    vectors: list[dict[str, float]] = []
-    for doc_counts in counts:
-        vector: dict[str, float] = {}
-        for gram, count in doc_counts.items():
-            tf = 1.0 + math.log(count)
-            idf = math.log((1.0 + doc_count) / (1.0 + document_frequency[gram])) + 1.0
-            vector[gram] = tf * idf
-        vectors.append(vector)
-    return vectors
+def _semantic_similarity_matrix(
+    texts: list[str], prototypes: list[str], model_name: str
+) -> np.ndarray:
+    """Return a (len(texts) x len(prototypes)) cosine similarity matrix."""
+    model = _load_embedding_model(model_name)
+    embeddings = model.encode(
+        [*texts, *prototypes],
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
+    text_embeddings = embeddings[: len(texts)]
+    prototype_embeddings = embeddings[len(texts) :]
+    return text_embeddings @ prototype_embeddings.T
 
 
-def _cosine_similarity(left: dict[str, float], right: dict[str, float]) -> float:
-    if not left or not right:
-        return 0.0
-    if len(left) > len(right):
-        left, right = right, left
-    numerator = sum(value * right.get(key, 0.0) for key, value in left.items())
-    left_norm = math.sqrt(sum(value * value for value in left.values()))
-    right_norm = math.sqrt(sum(value * value for value in right.values()))
-    if left_norm == 0.0 or right_norm == 0.0:
-        return 0.0
-    return float(numerator / (left_norm * right_norm))
+def _cjk_keyword_matches(raw: str, keyword: str) -> bool:
+    """Return True for CJK keyword hits, avoiding simple negated false positives."""
+    keyword = keyword.lower().strip()
+    if not keyword:
+        return False
+    if keyword.startswith(CJK_NEGATION_PREFIXES):
+        return keyword in raw
+
+    start = 0
+    while True:
+        index = raw.find(keyword, start)
+        if index == -1:
+            return False
+        prefix = raw[max(0, index - 3) : index]
+        if not CJK_NEGATION_RE.search(prefix):
+            return True
+        start = index + len(keyword)
+
+
+def _keyword_in_text(raw: str, clean: str, keyword: str) -> bool:
+    normalized_keyword = clean_text(keyword)
+    if not normalized_keyword:
+        return False
+    if CJK_RE.search(keyword):
+        return _cjk_keyword_matches(raw, keyword)
+
+    tokens = normalized_keyword.split()
+    if not tokens:
+        return False
+    pattern = re.compile(
+        r"(?<![A-Za-z0-9])"
+        + r"\s+".join(map(re.escape, tokens))
+        + r"(?![A-Za-z0-9])"
+    )
+    return pattern.search(clean) is not None
 
 
 def _keyword_match_score(text: str, keywords: tuple[str, ...]) -> tuple[float, str]:
@@ -108,10 +123,7 @@ def _keyword_match_score(text: str, keywords: tuple[str, ...]) -> tuple[float, s
     raw = str(text).lower()
     matched = []
     for keyword in keywords:
-        normalized_keyword = clean_text(keyword)
-        if not normalized_keyword:
-            continue
-        if normalized_keyword in clean or keyword.lower() in raw:
+        if _keyword_in_text(raw, clean, keyword):
             matched.append(keyword)
     return len(matched) / len(keywords), "; ".join(dict.fromkeys(matched))
 
@@ -147,7 +159,7 @@ def score_texts_against_prototypes(
     prototypes_df: pd.DataFrame,
     case_col: str,
     text_col: str,
-    ngram_range: tuple[int, int] = (2, 4),
+    model_name: str = DEFAULT_MODEL_NAME,
     keyword_weight: float = 0.35,
 ) -> pd.DataFrame:
     """Return long-form prototype scores for every case/prototype pair."""
@@ -155,35 +167,33 @@ def score_texts_against_prototypes(
         raise ValueError(f"Case id column '{case_col}' is not in the text dataset.")
     if text_col not in texts_df.columns:
         raise ValueError(f"Text column '{text_col}' is not in the text dataset.")
-    if ngram_range[0] < 1 or ngram_range[1] < ngram_range[0]:
-        raise ValueError("ngram_range must be a valid (min_n, max_n) pair.")
 
     keyword_weight = min(max(float(keyword_weight), 0.0), 1.0)
     prototypes = _load_prototypes(prototypes_df)
 
     text_values = texts_df[text_col].fillna("").astype(str).tolist()
     prototype_values = [prototype.prototype for prototype in prototypes]
-    vectors = _tfidf_vectors(text_values + prototype_values, ngram_range)
-    text_vectors = vectors[: len(text_values)]
-    prototype_vectors = vectors[len(text_values) :]
+    similarity_matrix = _semantic_similarity_matrix(text_values, prototype_values, model_name)
 
     rows = []
     for text_idx, (_, text_row) in enumerate(texts_df.iterrows()):
         case_id = text_row[case_col]
         text = text_row[text_col]
-        for prototype, prototype_vector in zip(prototypes, prototype_vectors):
-            ngram_score = _cosine_similarity(text_vectors[text_idx], prototype_vector)
+        for prototype_idx, prototype in enumerate(prototypes):
+            # Cosine similarity between embeddings can be slightly negative for
+            # unrelated text; clip to 0 since membership scores are in [0, 1].
+            semantic_score = max(0.0, float(similarity_matrix[text_idx, prototype_idx]))
             keyword_score, matched_keywords = _keyword_match_score(text, prototype.keywords)
             if math.isnan(keyword_score):
-                score = ngram_score
+                score = semantic_score
             else:
-                score = (1.0 - keyword_weight) * ngram_score + keyword_weight * keyword_score
+                score = (1.0 - keyword_weight) * semantic_score + keyword_weight * keyword_score
             rows.append(
                 {
                     "case_id": case_id,
                     "condition_name": prototype.condition_name,
                     "prototype_type": prototype.prototype_type,
-                    "ngram_score": round(float(ngram_score), 6),
+                    "semantic_score": round(semantic_score, 6),
                     "keyword_score": None
                     if math.isnan(keyword_score)
                     else round(float(keyword_score), 6),
@@ -220,14 +230,14 @@ def highlight_matches(text: object, matched_keywords: object) -> str:
 
 def explain_score(row: pd.Series, keyword_weight: float) -> str:
     """Return a one-line, human-readable breakdown of how a score was built."""
-    ngram_score = float(row["ngram_score"])
+    semantic_score = float(row["semantic_score"])
     keyword_score = row.get("keyword_score")
     if keyword_score is None or (isinstance(keyword_score, float) and math.isnan(keyword_score)):
-        return f"score = ngram_similarity ({ngram_score:.3f}); no keywords supplied for this condition"
+        return f"score = semantic_similarity ({semantic_score:.3f}); no keywords supplied for this condition"
     keyword_score = float(keyword_score)
     matched = row.get("matched_keywords") or "none"
     return (
-        f"score = (1 - {keyword_weight:.2f}) x ngram ({ngram_score:.3f}) "
+        f"score = (1 - {keyword_weight:.2f}) x semantic ({semantic_score:.3f}) "
         f"+ {keyword_weight:.2f} x keyword ({keyword_score:.3f}); matched: {matched}"
     )
 
@@ -240,7 +250,7 @@ def add_low_signal_floor(
 ) -> pd.DataFrame:
     """Add a calibration score that suppresses low, unmatched surface overlap.
 
-    Percentile calibration can exaggerate tiny n-gram overlaps when a demo set is
+    Percentile calibration can exaggerate tiny low-signal similarities when a demo set is
     small and many raw scores are near zero. If a case has no keyword evidence
     for a condition and the raw score is below ``score_floor``, the calibration
     input is set to zero while the original score is preserved for inspection.

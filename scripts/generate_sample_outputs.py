@@ -94,7 +94,6 @@ def main() -> None:
         prototypes,
         case_col="case_id",
         text_col="text",
-        ngram_range=(2, 4),
         keyword_weight=0.35,
     )
     scores = add_low_signal_floor(scores)
@@ -103,10 +102,17 @@ def main() -> None:
     condition_cols = prototypes.loc[
         prototypes["type"].str.lower().eq("condition"), "condition_name"
     ].tolist()
+    # Substantive override: the default 75th-percentile crossover (~0.176) sits
+    # below cooperative/grateful cases whose semantic score is inflated by
+    # shared "citizen-government" phrasing despite not being complaints. 0.22
+    # sits at the natural gap between the mildest genuine complaint (case 2,
+    # 0.230) and the strongest false-positive cooperative case (case 8, 0.214).
+    anchors = {"dissatisfaction": (0.134692, 0.22, 0.30)}
     calibrated, calibration_rules = calibrate_scores(
         score_wide,
         condition_cols=condition_cols,
         method="fuzzy",
+        anchors=anchors,
     )
 
     qca_ready = calibrated.merge(texts[["case_id", "outcome"]], on="case_id", how="left")

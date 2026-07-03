@@ -1,81 +1,81 @@
-case_id,condition_name,prototype_type,ngram_score,keyword_score,matched_keywords,score,calibration_score,low_signal_floor_applied
-1,dissatisfaction,condition,0.0,0.071429,多次反映,0.025,0.025,False
-1,policy_demand,condition,0.054187,0.105263,希望; 处理,0.072063,0.072063,False
-1,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-1,trust,condition,0.004544,0.0,,0.002953,0.0,True
-1,constructive_resolution,outcome,0.009323,0.055556,处理,0.025504,0.025504,False
-2,dissatisfaction,condition,0.002832,0.0,,0.001841,0.0,True
-2,policy_demand,condition,0.010217,0.052632,申请,0.025062,0.025062,False
-2,coproduction_request,condition,0.00242,0.0,,0.001573,0.0,True
-2,trust,condition,0.002799,0.0,,0.001819,0.0,True
-2,constructive_resolution,outcome,0.002653,0.0,,0.001724,0.0,True
-3,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-3,policy_demand,condition,0.0,0.0,,0.0,0.0,True
-3,coproduction_request,condition,0.035935,0.3125,愿意; 配合; 志愿者; 宣传; 组织,0.132733,0.132733,False
-3,trust,condition,0.0,0.0,,0.0,0.0,True
-3,constructive_resolution,outcome,0.00504,0.055556,配合,0.02272,0.02272,False
-4,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-4,policy_demand,condition,0.0,0.0,,0.0,0.0,True
-4,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-4,trust,condition,0.021256,0.214286,感谢; 支持; 及时,0.088817,0.088817,False
-4,constructive_resolution,outcome,0.0,0.111111,感谢; 支持,0.038889,0.038889,False
-5,dissatisfaction,condition,0.007984,0.071429,不满,0.03019,0.03019,False
-5,policy_demand,condition,0.022012,0.157895,要求; 调整; 公开,0.069571,0.069571,False
-5,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-5,trust,condition,0.0,0.0,,0.0,0.0,True
-5,constructive_resolution,outcome,0.0,0.055556,调整,0.019444,0.019444,False
-6,dissatisfaction,condition,0.03215,0.142857,生气; 失望,0.070897,0.070897,False
-6,policy_demand,condition,0.003058,0.0,,0.001987,0.0,True
-6,coproduction_request,condition,0.002572,0.0,,0.001672,0.0,True
-6,trust,condition,0.002975,0.0,,0.001934,0.0,True
-6,constructive_resolution,outcome,0.00282,0.0,,0.001833,0.0,True
-7,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-7,policy_demand,condition,0.014115,0.315789,希望; 要求; 明确; 申请; 流程; 补贴,0.119701,0.119701,False
-7,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-7,trust,condition,0.0,0.0,,0.0,0.0,True
-7,constructive_resolution,outcome,0.006508,0.055556,明确,0.023675,0.023675,False
-8,dissatisfaction,condition,0.002864,0.0,,0.001861,0.0,True
-8,policy_demand,condition,0.002908,0.0,,0.00189,0.0,True
-8,coproduction_request,condition,0.068196,0.3125,愿意; 参与; 听证会; 协助; 反馈,0.153703,0.153703,False
-8,trust,condition,0.00283,0.0,,0.001839,0.0,True
-8,constructive_resolution,outcome,0.002682,0.055556,反馈,0.021188,0.021188,False
-9,dissatisfaction,condition,0.002925,0.0,,0.001901,0.0,True
-9,policy_demand,condition,0.002971,0.0,,0.001931,0.0,True
-9,coproduction_request,condition,0.010305,0.0,,0.006698,0.0,True
-9,trust,condition,0.021838,0.285714,满意; 很好; 放心; 耐心,0.114194,0.114194,False
-9,constructive_resolution,outcome,0.00274,0.055556,满意,0.021225,0.021225,False
-10,dissatisfaction,condition,0.0,0.214286,投诉; 没人处理; 没有回应,0.075,0.075,False
-10,policy_demand,condition,0.012503,0.052632,处理,0.026548,0.026548,False
-10,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-10,trust,condition,0.0,0.0,,0.0,0.0,True
-10,constructive_resolution,outcome,0.013483,0.055556,处理,0.028208,0.028208,False
-11,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-11,policy_demand,condition,0.014272,0.105263,流程; 调整,0.046119,0.046119,False
-11,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-11,trust,condition,0.0,0.0,,0.0,0.0,True
-11,constructive_resolution,outcome,0.0,0.055556,调整,0.019444,0.019444,False
-12,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-12,policy_demand,condition,0.0,0.0,,0.0,0.0,True
-12,coproduction_request,condition,0.010338,0.25,愿意; 一起; 宣传; 反馈,0.09422,0.09422,False
-12,trust,condition,0.0,0.0,,0.0,0.0,True
-12,constructive_resolution,outcome,0.0,0.055556,反馈,0.019444,0.019444,False
-13,dissatisfaction,condition,0.027892,0.071429,不信任,0.04313,0.04313,False
-13,policy_demand,condition,0.002891,0.0,,0.001879,0.0,True
-13,coproduction_request,condition,0.002432,0.0,,0.001581,0.0,True
-13,trust,condition,0.00999,0.071429,信任,0.031494,0.031494,False
-13,constructive_resolution,outcome,0.002666,0.0,,0.001733,0.0,True
-14,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-14,policy_demand,condition,0.012477,0.210526,请求; 说明; 公布; 方案,0.081794,0.081794,False
-14,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-14,trust,condition,0.005093,0.0,,0.00331,0.0,True
-14,constructive_resolution,outcome,0.004827,0.111111,说明; 公布,0.042026,0.042026,False
-15,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-15,policy_demand,condition,0.0,0.0,,0.0,0.0,True
-15,coproduction_request,condition,0.0,0.0,,0.0,0.0,True
-15,trust,condition,0.0,0.0,,0.0,0.0,True
-15,constructive_resolution,outcome,0.0,0.0,,0.0,0.0,True
-16,dissatisfaction,condition,0.0,0.0,,0.0,0.0,True
-16,policy_demand,condition,0.014647,0.052632,说明,0.027942,0.027942,False
-16,coproduction_request,condition,0.005186,0.0625,配合,0.025246,0.025246,False
-16,trust,condition,0.014251,0.142857,感谢; 耐心,0.059263,0.059263,False
-16,constructive_resolution,outcome,0.005685,0.222222,说明; 配合; 感谢; 登记,0.081473,0.081473,False
+case_id,condition_name,prototype_type,semantic_score,keyword_score,matched_keywords,score,calibration_score,low_signal_floor_applied
+1,dissatisfaction,condition,0.413367,0.052632,多次反映,0.287109,0.287109,False
+1,policy_demand,condition,0.35636,0.105263,希望; 处理,0.268476,0.268476,False
+1,coproduction_request,condition,0.308183,0.0,,0.200319,0.200319,False
+1,trust,condition,0.247421,0.0,,0.160823,0.160823,False
+1,constructive_resolution,outcome,0.326759,0.055556,处理,0.231838,0.231838,False
+2,dissatisfaction,condition,0.353589,0.0,,0.229833,0.229833,False
+2,policy_demand,condition,0.43787,0.052632,申请,0.303037,0.303037,False
+2,coproduction_request,condition,0.243976,0.0,,0.158584,0.158584,False
+2,trust,condition,0.122291,0.0,,0.079489,0.079489,False
+2,constructive_resolution,outcome,0.246512,0.0,,0.160232,0.160232,False
+3,dissatisfaction,condition,0.250599,0.0,,0.16289,0.16289,False
+3,policy_demand,condition,0.300304,0.0,,0.195198,0.195198,False
+3,coproduction_request,condition,0.593923,0.3125,愿意; 配合; 志愿者; 宣传; 组织,0.495425,0.495425,False
+3,trust,condition,0.370393,0.0,,0.240755,0.240755,False
+3,constructive_resolution,outcome,0.423598,0.055556,配合,0.294783,0.294783,False
+4,dissatisfaction,condition,0.085806,0.0,,0.055774,0.055774,False
+4,policy_demand,condition,0.192348,0.0,,0.125027,0.125027,False
+4,coproduction_request,condition,0.347096,0.0,,0.225612,0.225612,False
+4,trust,condition,0.318881,0.214286,感谢; 支持; 及时,0.282273,0.282273,False
+4,constructive_resolution,outcome,0.308673,0.111111,感谢; 支持,0.239526,0.239526,False
+5,dissatisfaction,condition,0.349497,0.052632,不满,0.245594,0.245594,False
+5,policy_demand,condition,0.307166,0.157895,要求; 调整; 公开,0.254921,0.254921,False
+5,coproduction_request,condition,0.132206,0.0,,0.085934,0.085934,False
+5,trust,condition,0.069605,0.0,,0.045244,0.045244,False
+5,constructive_resolution,outcome,0.203739,0.055556,调整,0.151875,0.151875,False
+6,dissatisfaction,condition,0.583647,0.105263,生气; 失望,0.416212,0.416212,False
+6,policy_demand,condition,0.205438,0.0,,0.133534,0.133534,False
+6,coproduction_request,condition,0.167346,0.0,,0.108775,0.108775,False
+6,trust,condition,0.135415,0.0,,0.08802,0.08802,False
+6,constructive_resolution,outcome,0.242882,0.0,,0.157873,0.157873,False
+7,dissatisfaction,condition,0.105501,0.0,,0.068576,0.068576,False
+7,policy_demand,condition,0.391487,0.315789,希望; 要求; 明确; 申请; 流程; 补贴,0.364993,0.364993,False
+7,coproduction_request,condition,0.229272,0.0,,0.149027,0.149027,False
+7,trust,condition,0.219744,0.0,,0.142834,0.142834,False
+7,constructive_resolution,outcome,0.295748,0.055556,明确,0.21168,0.21168,False
+8,dissatisfaction,condition,0.329375,0.0,,0.214094,0.214094,False
+8,policy_demand,condition,0.295822,0.0,,0.192284,0.192284,False
+8,coproduction_request,condition,0.621525,0.3125,愿意; 参与; 听证会; 协助; 反馈,0.513366,0.513366,False
+8,trust,condition,0.401715,0.0,,0.261115,0.261115,False
+8,constructive_resolution,outcome,0.489126,0.055556,反馈,0.337376,0.337376,False
+9,dissatisfaction,condition,0.260589,0.0,,0.169383,0.169383,False
+9,policy_demand,condition,0.20338,0.0,,0.132197,0.132197,False
+9,coproduction_request,condition,0.486086,0.0,,0.315956,0.315956,False
+9,trust,condition,0.5,0.285714,满意; 很好; 放心; 耐心,0.425,0.425,False
+9,constructive_resolution,outcome,0.533985,0.055556,满意,0.366534,0.366534,False
+10,dissatisfaction,condition,0.300198,0.157895,投诉; 没人处理; 没有回应,0.250392,0.250392,False
+10,policy_demand,condition,0.030147,0.052632,处理,0.038017,0.038017,False
+10,coproduction_request,condition,0.068079,0.0,,0.044252,0.044252,False
+10,trust,condition,0.042106,0.0,,0.027369,0.027369,False
+10,constructive_resolution,outcome,0.07745,0.055556,处理,0.069787,0.069787,False
+11,dissatisfaction,condition,0.122816,0.0,,0.07983,0.07983,False
+11,policy_demand,condition,0.219257,0.105263,流程; 调整,0.179359,0.179359,False
+11,coproduction_request,condition,0.235017,0.0,,0.152761,0.152761,False
+11,trust,condition,0.106255,0.0,,0.069066,0.069066,False
+11,constructive_resolution,outcome,0.305558,0.055556,调整,0.218057,0.218057,False
+12,dissatisfaction,condition,0.281095,0.0,,0.182712,0.182712,False
+12,policy_demand,condition,0.36401,0.0,,0.236607,0.236607,False
+12,coproduction_request,condition,0.451507,0.25,愿意; 一起; 宣传; 反馈,0.38098,0.38098,False
+12,trust,condition,0.313437,0.0,,0.203734,0.203734,False
+12,constructive_resolution,outcome,0.380053,0.055556,反馈,0.266479,0.266479,False
+13,dissatisfaction,condition,0.359252,0.052632,不信任,0.251935,0.251935,False
+13,policy_demand,condition,0.340235,0.0,,0.221153,0.221153,False
+13,coproduction_request,condition,0.102055,0.0,,0.066336,0.066336,False
+13,trust,condition,0.07371,0.0,,0.047911,0.047911,False
+13,constructive_resolution,outcome,0.228422,0.0,,0.148474,0.148474,False
+14,dissatisfaction,condition,0.235354,0.0,,0.15298,0.15298,False
+14,policy_demand,condition,0.489724,0.210526,请求; 说明; 公布; 方案,0.392005,0.392005,False
+14,coproduction_request,condition,0.168564,0.0,,0.109567,0.109567,False
+14,trust,condition,0.219705,0.0,,0.142808,0.142808,False
+14,constructive_resolution,outcome,0.255144,0.111111,说明; 公布,0.204733,0.204733,False
+15,dissatisfaction,condition,0.103811,0.0,,0.067477,0.067477,False
+15,policy_demand,condition,0.142618,0.0,,0.092702,0.092702,False
+15,coproduction_request,condition,0.086653,0.0,,0.056324,0.056324,False
+15,trust,condition,0.111597,0.0,,0.072538,0.072538,False
+15,constructive_resolution,outcome,0.153774,0.0,,0.099953,0.099953,False
+16,dissatisfaction,condition,0.238965,0.0,,0.155327,0.155327,False
+16,policy_demand,condition,0.397319,0.052632,说明,0.276679,0.276679,False
+16,coproduction_request,condition,0.459471,0.0625,配合,0.320531,0.320531,False
+16,trust,condition,0.445966,0.142857,感谢; 耐心,0.339878,0.339878,False
+16,constructive_resolution,outcome,0.460483,0.222222,说明; 配合; 感谢; 登记,0.377092,0.377092,False

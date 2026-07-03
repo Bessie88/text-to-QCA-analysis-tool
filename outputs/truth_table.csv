@@ -1,9 +1,10 @@
 dissatisfaction,policy_demand,coproduction_request,trust,configuration,n_cases,positive_cases,negative_cases,consistency,coverage,outcome_value,status,cases
-0,0,1,0,~dissatisfaction * ~policy_demand * coproduction_request * ~trust,3,3,0,1.0,0.272727,1,sufficient,3; 8; 12
-0,0,0,1,~dissatisfaction * ~policy_demand * ~coproduction_request * trust,2,2,0,1.0,0.181818,1,sufficient,4; 9
-0,1,1,1,~dissatisfaction * policy_demand * coproduction_request * trust,1,1,0,1.0,0.063211,1,sufficient,16
-0,1,0,0,~dissatisfaction * policy_demand * ~coproduction_request * ~trust,4,3,1,0.8187,0.270457,1,contradictory,2; 7; 11; 14
-1,1,0,0,dissatisfaction * policy_demand * ~coproduction_request * ~trust,3,2,1,0.742173,0.177333,0,contradictory,1; 5; 10
-0,0,0,0,~dissatisfaction * ~policy_demand * ~coproduction_request * ~trust,1,0,1,0.052496,0.006755,0,not_sufficient,15
-1,0,0,0,dissatisfaction * ~policy_demand * ~coproduction_request * ~trust,1,0,1,0.0,0.0,0,not_sufficient,6
-1,0,0,1,dissatisfaction * ~policy_demand * ~coproduction_request * trust,1,0,1,0.0,0.0,0,not_sufficient,13
+0,0,1,1,~dissatisfaction * ~policy_demand * coproduction_request * trust,4,4,0,1.0,0.265719,1,sufficient,3; 4; 8; 9
+0,1,1,1,~dissatisfaction * policy_demand * coproduction_request * trust,2,2,0,0.981921,0.271299,1,sufficient,12; 16
+1,1,1,1,dissatisfaction * policy_demand * coproduction_request * trust,1,1,0,0.965722,0.146441,1,sufficient,1
+0,1,0,1,~dissatisfaction * policy_demand * ~coproduction_request * trust,1,1,0,0.951609,0.098231,1,sufficient,7
+0,1,0,0,~dissatisfaction * policy_demand * ~coproduction_request * ~trust,1,1,0,0.700516,0.157133,0,weak,14
+1,1,1,0,dissatisfaction * policy_demand * coproduction_request * ~trust,1,0,1,0.579136,0.063955,0,weak,2
+1,1,0,0,dissatisfaction * policy_demand * ~coproduction_request * ~trust,2,1,1,0.507094,0.102624,0,contradictory,5; 13
+0,0,0,0,~dissatisfaction * ~policy_demand * ~coproduction_request * ~trust,2,1,1,0.29436,0.060842,0,contradictory,11; 15
+1,0,0,0,dissatisfaction * ~policy_demand * ~coproduction_request * ~trust,2,0,2,0.067022,0.012872,0,not_sufficient,6; 10

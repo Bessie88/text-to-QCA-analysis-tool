@@ -152,7 +152,7 @@ def download_button(label: str, df: pd.DataFrame, filename: str) -> None:
         data=df.to_csv(index=False).encode("utf-8-sig"),
         file_name=filename,
         mime="text/csv",
-        width="stretch",
+        use_container_width=True,
     )
 
 
@@ -306,8 +306,7 @@ def main() -> None:
         )
 
         st.header("🧮 Scoring")
-        min_ngram = st.slider("Minimum character n-gram", 1, 4, 2)
-        max_ngram = st.slider("Maximum character n-gram", min_ngram, 6, 4)
+        st.caption("Semantic similarity model: paraphrase-multilingual-MiniLM-L12-v2")
         keyword_weight = st.slider("Keyword weight", 0.0, 1.0, 0.35, 0.05)
 
         st.header("🎚️ Calibration")
@@ -356,14 +355,14 @@ def main() -> None:
         st.stop()
 
     try:
-        scores = score_texts_against_prototypes(
-            texts,
-            prototypes,
-            case_col=case_col,
-            text_col=text_col,
-            ngram_range=(min_ngram, max_ngram),
-            keyword_weight=keyword_weight,
-        )
+        with st.spinner("Scoring texts (first run loads the embedding model)..."):
+            scores = score_texts_against_prototypes(
+                texts,
+                prototypes,
+                case_col=case_col,
+                text_col=text_col,
+                keyword_weight=keyword_weight,
+            )
         scores = add_low_signal_floor(scores)
         score_wide = wide_score_table(scores, value_col="calibration_score")
     except Exception as exc:
@@ -490,7 +489,7 @@ def main() -> None:
     )
 
     with tab_scores:
-        st.dataframe(scores, width="stretch", hide_index=True)
+        st.dataframe(scores, use_container_width=True, hide_index=True)
         download_button("Download score table", scores, "score_table.csv")
         download_button(
             "Download wide score table",
@@ -501,7 +500,7 @@ def main() -> None:
         st.subheader("Explain a score")
         st.caption(
             "Pick a case and a condition to see which words in the raw text matched "
-            "the prototype's keywords, and how the n-gram and keyword components "
+            "the prototype's keywords, and how the semantic and keyword components "
             "combined into the final score."
         )
         case_ids = scores["case_id"].unique().tolist()
@@ -525,8 +524,8 @@ def main() -> None:
             st.caption(explain_score(row, keyword_weight))
 
     with tab_calibration:
-        st.dataframe(calibration_rules, width="stretch", hide_index=True)
-        st.dataframe(calibrated, width="stretch", hide_index=True)
+        st.dataframe(calibration_rules, use_container_width=True, hide_index=True)
+        st.dataframe(calibrated, use_container_width=True, hide_index=True)
         download_button("Download calibration rules", calibration_rules, "calibration_rules.csv")
         download_button(
             "Download calibrated membership",
@@ -576,7 +575,7 @@ def main() -> None:
                         plot_bgcolor="#fcfcfb",
                         paper_bgcolor="rgba(0,0,0,0)",
                     )
-                    st.plotly_chart(fig, width="stretch")
+                    st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.bar_chart(values)
 
@@ -593,7 +592,7 @@ def main() -> None:
                     "high (>0.66)": int((values > 0.66).sum()),
                 }
             )
-        st.dataframe(pd.DataFrame(bucket_rows), width="stretch", hide_index=True)
+        st.dataframe(pd.DataFrame(bucket_rows), use_container_width=True, hide_index=True)
 
     with tab_review:
         st.caption(
@@ -608,7 +607,7 @@ def main() -> None:
         else:
             edited = st.data_editor(
                 review_table,
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 disabled=["case_id", "condition_name", "text", "raw_score", "anchor", "calibrated_value"],
                 column_config={
@@ -635,18 +634,18 @@ def main() -> None:
             download_button("Download human review log", review_log, "human_review_log.csv")
 
     with tab_qca:
-        st.dataframe(qca_ready, width="stretch", hide_index=True)
+        st.dataframe(qca_ready, use_container_width=True, hide_index=True)
         download_button("Download QCA-ready dataset", qca_ready, "qca_ready_dataset.csv")
 
     with tab_truth:
-        st.dataframe(table, width="stretch", hide_index=True)
+        st.dataframe(table, use_container_width=True, hide_index=True)
         download_button("Download truth table", table, "truth_table.csv")
 
     with tab_solutions:
         if solutions.empty:
             st.warning("No configuration meets the current consistency and case thresholds.")
         else:
-            st.dataframe(solutions, width="stretch", hide_index=True)
+            st.dataframe(solutions, use_container_width=True, hide_index=True)
         download_button(
             "Download solution configurations",
             solutions,
@@ -687,8 +686,8 @@ def main() -> None:
                     plot_bgcolor="#fcfcfb",
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig, width="stretch")
-            st.dataframe(cutoff_sweep, width="stretch", hide_index=True)
+                st.plotly_chart(fig, use_container_width=True)
+            st.dataframe(cutoff_sweep, use_container_width=True, hide_index=True)
             download_button("Download cutoff sweep", cutoff_sweep, "sensitivity_cutoff_sweep.csv")
 
         with right:
@@ -716,8 +715,8 @@ def main() -> None:
                     plot_bgcolor="#fcfcfb",
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig2, width="stretch")
-            st.dataframe(threshold_sweep, width="stretch", hide_index=True)
+                st.plotly_chart(fig2, use_container_width=True)
+            st.dataframe(threshold_sweep, use_container_width=True, hide_index=True)
             download_button("Download crossover sweep", threshold_sweep, "sensitivity_threshold_sweep.csv")
 
     with tab_figure:
@@ -732,7 +731,7 @@ def main() -> None:
                 labels=dict(x="Condition / outcome", y="Case", color="Membership"),
             )
             fig.update_layout(height=max(420, 24 * len(heatmap_data)), paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
         else:
             st.dataframe(heatmap_data.style.background_gradient(cmap="Blues"))
 
@@ -750,12 +749,12 @@ def main() -> None:
             )
             scatter.add_vline(x=consistency_cutoff, line_dash="dash", line_color=COLOR_MUTED)
             scatter.update_layout(plot_bgcolor="#fcfcfb", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(scatter, width="stretch")
+            st.plotly_chart(scatter, use_container_width=True)
 
     with st.expander("Method note", expanded=False):
         st.markdown(
             """
-Scores combine character n-gram cosine similarity and optional keyword overlap.
+Scores combine multilingual semantic cosine similarity and optional keyword overlap.
 Fuzzy calibration uses default 25th percentile, median, and 75th percentile anchors
 unless overridden in the sidebar. Configuration consistency is calculated as
 `sum(min(X, Y)) / sum(X)` and coverage as `sum(min(X, Y)) / sum(Y)`. Cases flagged

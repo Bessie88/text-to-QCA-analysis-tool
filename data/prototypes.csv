@@ -1,5 +1,5 @@
 condition_name,prototype,type,keywords
-dissatisfaction,"The citizen expresses dissatisfaction, anger, complaint, frustration, or distrust. 居民表达不满、生气、抱怨、失望或不信任的情绪。",condition,"dissatisfaction;anger;complaint;frustration;distrust;不满;抱怨;生气;失望;投诉;多次反映;不信任;没人处理;没有回应"
+dissatisfaction,"The citizen is angry, frustrated, and distrustful, repeatedly complaining that the government has ignored, delayed, or failed to properly respond to their problem. 居民感到生气、失望、不信任，反复抱怨政府忽视、拖延或没有妥善回应他们反映的问题。",condition,"anger;frustration;complaint;distrust;ignored;delayed;no response;不满;抱怨;生气;失望;投诉;多次反映;不信任;没人处理;没有回应;忽视;拖延;敷衍"
 policy_demand,"The citizen asks government to clarify, adjust, implement, disclose, or process a policy. 居民希望政府明确、调整、处理、公开或说明某项政策。",condition,"clarify;adjust;implement;disclose;application process;policy plan;希望;要求;请求;明确;说明;申请;流程;调整;处理;公开;公布;补贴;方案"
 coproduction_request,"The citizen shows willingness to cooperate, participate, volunteer, provide feedback, or co-produce public service. 居民愿意配合、参与、协助或反馈，共同推动公共服务。",condition,"cooperate;participate;volunteer;assist;public outreach;feedback;愿意;配合;一起;参与;听证会;协助;志愿者;宣传;反馈;组织"
 trust,"The citizen expresses trust, satisfaction, gratitude, support, or confidence in government work. 居民对政府工作表示感谢、满意、支持或信任。",condition,"trust;satisfaction;gratitude;support;confidence;respectful explanation;感谢;满意;很好;支持;放心;信任;耐心;及时"
