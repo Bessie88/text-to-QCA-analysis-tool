@@ -184,3 +184,45 @@ def near_threshold_cases(
     return pd.DataFrame(
         rows, columns=["case_id", "condition_name", "raw_score", "anchor", "distance_fraction"]
     )
+
+
+def calibration_stability_warnings(
+    near_threshold: pd.DataFrame,
+    condition_cols: list[str],
+    n_cases: int,
+    warn_fraction: float = 0.25,
+) -> pd.DataFrame:
+    """Flag conditions whose calibration anchor looks unstable.
+
+    A condition is flagged when at least ``warn_fraction`` of all cases fall within
+    the review band of its calibration anchor (see ``near_threshold_cases``). A high
+    share of near-threshold cases means the anchor sits in a crowded part of the
+    score distribution, so small wording differences -- or a small anchor shift --
+    would flip a large part of the sample's membership. This is common with small
+    samples and with semantic-embedding scores, where raw scores cluster more
+    tightly than lexical-overlap scores did, so the default percentile anchors
+    deserve a substantive check rather than blind trust.
+    """
+    if n_cases <= 0:
+        return pd.DataFrame(
+            columns=["condition_name", "n_near_threshold", "n_cases", "near_threshold_fraction"]
+        )
+    counts = (
+        near_threshold.groupby("condition_name").size() if not near_threshold.empty else pd.Series(dtype=int)
+    )
+    rows = []
+    for condition in condition_cols:
+        n_near = int(counts.get(condition, 0))
+        fraction = n_near / n_cases
+        if fraction >= warn_fraction:
+            rows.append(
+                {
+                    "condition_name": condition,
+                    "n_near_threshold": n_near,
+                    "n_cases": n_cases,
+                    "near_threshold_fraction": round(fraction, 3),
+                }
+            )
+    return pd.DataFrame(
+        rows, columns=["condition_name", "n_near_threshold", "n_cases", "near_threshold_fraction"]
+    )

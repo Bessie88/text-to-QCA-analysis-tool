@@ -6,7 +6,12 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from qca_text_tool.calibration import calibrate_scores, default_fuzzy_anchors, near_threshold_cases
+from qca_text_tool.calibration import (
+    calibrate_scores,
+    calibration_stability_warnings,
+    default_fuzzy_anchors,
+    near_threshold_cases,
+)
 from qca_text_tool.qca import (
     binarize_threshold_sweep,
     consistency_cutoff_sweep,
@@ -30,13 +35,17 @@ except Exception:  # pragma: no cover
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data"
 
-COLOR_BLUE = "#2a78d6"
-COLOR_BLUE_DARK = "#184f95"
-COLOR_ORANGE = "#eb6834"
-COLOR_MUTED = "#9aa0a6"
-COLOR_GOOD = "#0ca30c"
-COLOR_WARNING = "#c98500"
-COLOR_CRITICAL = "#d03b3b"
+COLOR_BLUE = "#2f6fdd"
+COLOR_BLUE_DARK = "#163f77"
+COLOR_TEAL = "#0f8f7a"
+COLOR_ORANGE = "#d97706"
+COLOR_MUTED = "#6b7280"
+COLOR_GOOD = "#15803d"
+COLOR_WARNING = "#b45309"
+COLOR_CRITICAL = "#b91c1c"
+COLOR_INK = "#111827"
+COLOR_SURFACE = "#ffffff"
+COLOR_BORDER = "#d9e2ef"
 
 STATUS_COLORS = {
     "sufficient": COLOR_GOOD,
@@ -56,84 +65,230 @@ BLUE_SEQUENTIAL_SCALE = [
 
 CUSTOM_CSS = f"""
 <style>
+.stApp {{
+    background: #f5f7fb;
+}}
+.block-container {{
+    padding-top: 1.35rem;
+    padding-bottom: 2.25rem;
+    max-width: 1440px;
+}}
 .qca-hero {{
-    background: linear-gradient(135deg, {COLOR_BLUE} 0%, {COLOR_BLUE_DARK} 100%);
-    padding: 28px 32px;
-    border-radius: 14px;
-    color: #ffffff;
-    margin-bottom: 18px;
+    background:
+        radial-gradient(circle at 92% 18%, rgba(15, 143, 122, 0.14), transparent 28%),
+        linear-gradient(135deg, #ffffff 0%, #f0f6ff 58%, #fff7ed 100%);
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 16px;
+    color: {COLOR_INK};
+    margin-bottom: 12px;
+    padding: 26px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    box-shadow: 0 18px 42px rgba(17, 24, 39, 0.08);
+}}
+.qca-hero-copy {{
+    max-width: 820px;
+}}
+.qca-eyebrow {{
+    color: {COLOR_TEAL};
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
 }}
 .qca-hero h1 {{
-    margin: 0 0 6px 0;
-    font-size: 1.85rem;
-    font-weight: 700;
+    margin: 0 0 8px 0;
+    font-size: clamp(1.65rem, 2.6vw, 2.35rem);
+    line-height: 1.08;
+    font-weight: 760;
+    letter-spacing: 0;
 }}
 .qca-hero p {{
     margin: 0;
-    opacity: 0.92;
-    font-size: 0.98rem;
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.55;
+}}
+.qca-hero-panel {{
+    min-width: 230px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(217, 226, 239, 0.95);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, 0.06);
+}}
+.qca-hero-panel span {{
+    display: block;
+    color: {COLOR_MUTED};
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}}
+.qca-hero-panel strong {{
+    display: block;
+    color: {COLOR_BLUE_DARK};
+    font-size: 1.08rem;
+    margin-bottom: 3px;
+}}
+.qca-hero-panel small {{
+    display: block;
+    color: #64748b;
+    line-height: 1.35;
+}}
+.qca-workflow {{
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 10px;
+    background: {COLOR_BORDER};
+    margin-bottom: 18px;
+}}
+.qca-workflow-step {{
+    background: rgba(255, 255, 255, 0.92);
+    padding: 12px 14px;
+    min-height: 72px;
+}}
+.qca-workflow-step span {{
+    display: block;
+    color: {COLOR_ORANGE};
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}}
+.qca-workflow-step strong {{
+    display: block;
+    color: {COLOR_INK};
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+}}
+.qca-workflow-step small {{
+    color: #64748b;
+    line-height: 1.3;
 }}
 div[data-testid="stMetric"] {{
-    background: #ffffff;
-    border: 1px solid #e1e0d9;
-    border-radius: 10px;
-    padding: 12px 14px 8px 14px;
-    box-shadow: 0 1px 3px rgba(11, 11, 11, 0.06);
+    background: {COLOR_SURFACE};
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 8px;
+    padding: 14px 15px 10px 15px;
+    box-shadow: 0 8px 22px rgba(17, 24, 39, 0.055);
+}}
+div[data-testid="stMetric"] label {{
+    color: #64748b !important;
+    font-weight: 700;
+}}
+[data-testid="stDataFrame"] {{
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.045);
 }}
 .stTabs [data-baseweb="tab-list"] {{
-    gap: 4px;
+    gap: 6px;
+    background: #eef3f9;
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 10px;
+    padding: 5px;
 }}
 .stTabs [data-baseweb="tab"] {{
-    font-weight: 600;
-    padding: 8px 14px;
+    font-weight: 700;
+    padding: 8px 13px;
+    border-radius: 8px;
+    color: #475569;
+}}
+.stTabs [aria-selected="true"] {{
+    background: {COLOR_SURFACE};
+    color: {COLOR_BLUE_DARK};
+    box-shadow: 0 2px 8px rgba(17, 24, 39, 0.08);
+}}
+[data-testid="stExpander"] {{
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
+}}
+.stDownloadButton button {{
+    border-radius: 8px;
+    border: 1px solid {COLOR_BLUE};
+    color: {COLOR_BLUE_DARK};
+    font-weight: 700;
+}}
+.stDownloadButton button:hover {{
+    border-color: {COLOR_BLUE_DARK};
+    color: {COLOR_BLUE_DARK};
+    background: #eef5ff;
 }}
 mark {{
-    background: #ffd68a;
+    background: #fde68a;
     color: #2b1a00;
     padding: 0 3px;
     border-radius: 3px;
 }}
 section[data-testid="stSidebar"] {{
-    background: linear-gradient(180deg, #f7f9fc 0%, #eef2f8 100%);
-    border-right: 1px solid #e1e0d9;
+    background: #f8fafc;
+    border-right: 1px solid {COLOR_BORDER};
 }}
 section[data-testid="stSidebar"] .qca-sidebar-title {{
     font-size: 1.05rem;
-    font-weight: 700;
+    font-weight: 800;
     color: {COLOR_BLUE_DARK};
     margin: 2px 0 2px 0;
 }}
 section[data-testid="stSidebar"] .qca-sidebar-caption {{
     font-size: 0.82rem;
-    color: #52514e;
-    margin-bottom: 6px;
+    color: #64748b;
+    margin-bottom: 8px;
 }}
 section[data-testid="stSidebar"] h2 {{
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: {COLOR_BLUE_DARK};
-    border-bottom: 2px solid {COLOR_BLUE};
-    padding-bottom: 6px;
+    border-bottom: 1px solid {COLOR_BORDER};
+    padding-bottom: 7px;
     margin-top: 22px;
     margin-bottom: 10px;
 }}
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
+    border-radius: 8px;
+    border-color: {COLOR_BORDER};
+    background: {COLOR_SURFACE};
+}}
 section[data-testid="stSidebar"] .stButton button {{
-    background: #ffffff;
+    background: {COLOR_SURFACE};
     border: 1px solid {COLOR_CRITICAL};
     color: {COLOR_CRITICAL};
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     width: 100%;
 }}
 section[data-testid="stSidebar"] .stButton button:hover {{
-    background: {COLOR_CRITICAL};
-    color: #ffffff;
+    background: #fef2f2;
+    color: {COLOR_CRITICAL};
     border-color: {COLOR_CRITICAL};
 }}
-section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
-    border-radius: 10px;
+.stAlert {{
+    border-radius: 8px;
+}}
+@media (max-width: 900px) {{
+    .qca-hero {{
+        display: block;
+        padding: 22px;
+    }}
+    .qca-hero-panel {{
+        margin-top: 16px;
+        min-width: 0;
+    }}
+    .qca-workflow {{
+        grid-template-columns: 1fr;
+    }}
 }}
 </style>
 """
@@ -156,19 +311,52 @@ def download_button(label: str, df: pd.DataFrame, filename: str) -> None:
     )
 
 
-def coerce_outcome(series: pd.Series) -> pd.Series:
-    mapped = series.astype(str).str.strip().str.lower().map(
-        {
-            "1": 1.0,
-            "0": 0.0,
-            "true": 1.0,
-            "false": 0.0,
-            "yes": 1.0,
-            "no": 0.0,
-            "positive": 1.0,
-            "negative": 0.0,
-        }
+@st.cache_data(show_spinner=False)
+def cached_score_texts_against_prototypes(
+    texts_df: pd.DataFrame,
+    prototypes_df: pd.DataFrame,
+    case_col: str,
+    text_col: str,
+    keyword_weight: float,
+) -> pd.DataFrame:
+    """Cache scoring by content so unrelated widget reruns skip re-embedding."""
+    return score_texts_against_prototypes(
+        texts_df,
+        prototypes_df,
+        case_col=case_col,
+        text_col=text_col,
+        keyword_weight=keyword_weight,
     )
+
+
+OUTCOME_LABEL_MAP = {
+    "1": 1.0,
+    "0": 0.0,
+    "true": 1.0,
+    "false": 0.0,
+    "yes": 1.0,
+    "no": 0.0,
+    "positive": 1.0,
+    "negative": 0.0,
+    "是": 1.0,
+    "否": 0.0,
+    "有": 1.0,
+    "无": 0.0,
+    "没有": 0.0,
+}
+
+
+def unmapped_outcome_labels(series: pd.Series) -> list[str]:
+    """Return distinct raw values that ``coerce_outcome`` would silently zero-fill."""
+    text = series.astype(str).str.strip().str.lower()
+    numeric = pd.to_numeric(series, errors="coerce")
+    mapped = text.map(OUTCOME_LABEL_MAP)
+    unresolved = numeric.isna() & mapped.isna() & series.notna() & text.ne("")
+    return sorted(series[unresolved].astype(str).unique().tolist())
+
+
+def coerce_outcome(series: pd.Series) -> pd.Series:
+    mapped = series.astype(str).str.strip().str.lower().map(OUTCOME_LABEL_MAP)
     numeric = pd.to_numeric(series, errors="coerce")
     result = numeric.where(numeric.notna(), mapped)
     if result.max(skipna=True) and result.max(skipna=True) > 1:
@@ -289,8 +477,23 @@ def main() -> None:
     st.markdown(
         """
         <div class="qca-hero">
-            <h1>🧭 Text-to-QCA Analysis Tool</h1>
-            <p>Turn raw text into calibrated conditions and a QCA solution — upload, score, calibrate, solve.</p>
+            <div class="qca-hero-copy">
+                <div class="qca-eyebrow">Prototype scoring · Calibration · QCA output</div>
+                <h1>Text-to-QCA Analysis Tool</h1>
+                <p>Convert raw text into transparent set memberships, inspect borderline cases, and export QCA-ready results.</p>
+            </div>
+            <div class="qca-hero-panel">
+                <span>Workflow status</span>
+                <strong>Demo ready · Upload ready</strong>
+                <small>Use the default data or map your own CSV columns in the sidebar.</small>
+            </div>
+        </div>
+        <div class="qca-workflow">
+            <div class="qca-workflow-step"><span>01</span><strong>Map data</strong><small>Case id, text, outcome</small></div>
+            <div class="qca-workflow-step"><span>02</span><strong>Score texts</strong><small>Semantic + keyword evidence</small></div>
+            <div class="qca-workflow-step"><span>03</span><strong>Calibrate</strong><small>Fuzzy or crisp membership</small></div>
+            <div class="qca-workflow-step"><span>04</span><strong>Review</strong><small>Check near-threshold cases</small></div>
+            <div class="qca-workflow-step"><span>05</span><strong>Export QCA</strong><small>Truth table and solutions</small></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -328,10 +531,14 @@ def main() -> None:
             if "case_id" in texts.columns
             else 0,
         )
+        text_candidates = [col for col in texts.columns if col != case_col]
+        if not text_candidates:
+            st.error("The text dataset needs at least two columns: one case id column and one text column.")
+            st.stop()
         text_col = st.selectbox(
             "Text column",
-            texts.columns.tolist(),
-            index=texts.columns.tolist().index("text") if "text" in texts.columns else 0,
+            text_candidates,
+            index=text_candidates.index("text") if "text" in text_candidates else 0,
         )
         outcome_candidates = ["Use prototype outcome"] + [
             col for col in texts.columns if col not in {case_col, text_col}
@@ -395,12 +602,12 @@ def main() -> None:
 
     try:
         with st.spinner("Scoring texts (first run loads the embedding model)..."):
-            scores = score_texts_against_prototypes(
+            scores = cached_score_texts_against_prototypes(
                 texts,
                 prototypes,
-                case_col=case_col,
-                text_col=text_col,
-                keyword_weight=keyword_weight,
+                case_col,
+                text_col,
+                keyword_weight,
             )
         scores = add_low_signal_floor(scores)
         score_wide = wide_score_table(scores, value_col="calibration_score")
@@ -430,6 +637,21 @@ def main() -> None:
     near_threshold = near_threshold_cases(
         score_wide, calibration_rules, condition_cols, band_fraction=review_band
     )
+    stability_warnings = calibration_stability_warnings(
+        near_threshold, condition_cols, n_cases=len(score_wide)
+    )
+    if not stability_warnings.empty:
+        flagged = ", ".join(
+            f"{row.condition_name} ({row.near_threshold_fraction:.0%} of cases)"
+            for row in stability_warnings.itertuples()
+        )
+        st.warning(
+            "Calibration anchor may be unstable for: "
+            f"{flagged}. A large share of cases sit close to the crossover/threshold, "
+            "so small wording differences (or a small anchor shift) could flip a lot "
+            "of memberships. Consider setting the anchor by hand instead of trusting "
+            "the automatic percentile default."
+        )
     review_table = pd.DataFrame()
     if not near_threshold.empty:
         review_table = near_threshold.merge(
@@ -478,6 +700,15 @@ def main() -> None:
             on="case_id",
             how="left",
         )
+        unmapped_labels = unmapped_outcome_labels(qca_ready["outcome"])
+        if unmapped_labels:
+            shown = ", ".join(unmapped_labels[:10])
+            more = f" (+{len(unmapped_labels) - 10} more)" if len(unmapped_labels) > 10 else ""
+            st.warning(
+                f"Outcome column '{outcome_col}' has values not recognized as 0/1 "
+                f"(e.g. {shown}{more}); these rows will be treated as outcome = 0. "
+                "Recode them to 0/1, yes/no, 是/否, or similar if that's not intended."
+            )
         qca_ready["outcome"] = coerce_outcome(qca_ready["outcome"])
         qca_outcome_col = "outcome"
 
